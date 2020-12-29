@@ -13,21 +13,24 @@ syslog:
   # these messages will NOT be shown
   filter:
     facility: "auth,authpriv"
-    severity: "debug,info"
+    severity: "debug"
 
   # Output manipulation
   output:
-    template: "[SYSLOG] %s"
+#    template: "[SYSLOG] %s"
+
+  forwardingsocket:
+    hostnameport: logs5.papertrailapp.com:52803
 
 # Named pipes (FIFO, multiple allowed)
 pipes:
-  -
-    path: /docker.stdout
-    type: stdout
-    perms: 0666
-  -
-    path: /docker.stderr
-    type: stderr
-    perms: 0666
-    output:
-      #template: "[STDERR] %s"
+#  -
+#    path: /tmp/docker.stdout
+#    type: stdout
+#    perms: 0666
+#  -
+#    path: /tmp/docker.stderr
+#    type: stderr
+#    perms: 0666
+#    output:
+#      #template: "[STDERR] %s"

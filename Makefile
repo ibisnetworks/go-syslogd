@@ -15,6 +15,7 @@ docker:
 	docker build . -t webdevops/go-syslogd
 
 docker-dev:
+	cp build/go-syslogd-64-linux go-syslogd
 	docker build -f Dockerfile.develop . -t webdevops/go-syslogd:develop
 
 docker-run-dev: docker-dev

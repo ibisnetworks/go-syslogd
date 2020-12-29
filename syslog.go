@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	syslog "gopkg.in/mcuadros/go-syslog.v2"
+	syslogclient "github.com/RackSec/srslog"
 	"os"
 )
 
@@ -17,6 +18,9 @@ type Syslog struct {
 	}
 	Output struct {
 		Template string
+	}
+	ForwardingSocket struct {
+		HostnamePort string
 	}
 }
 
@@ -65,6 +69,7 @@ var SyslogPriorityMap = map[string]int{
 
 func handleSyslog() {
 	LoggerStdout.Verbose(fmt.Sprintf(" -> starting syslog daemon (%s)", configuration.Syslog.Path))
+	LoggerStdout.Verbose(fmt.Sprintf(" -> forwarding messages to remote syslog at (%s)", configuration.Syslog.ForwardingSocket.HostnamePort))
 
 	// Check if syslog path exists, remove if already existing
 	_, err := os.Stat(configuration.Syslog.Path)
@@ -81,7 +86,18 @@ func handleSyslog() {
 	server.ListenUnixgram(configuration.Syslog.Path)
 	server.Boot()
 
-	go func(channel syslog.LogPartsChannel) {
+	forwardingConn, err := syslogclient.Dial("tcp", configuration.Syslog.ForwardingSocket.HostnamePort, syslogclient.LOG_INFO, "test")
+	if err != nil {
+		fmt.Print("Error opening forwarding TCP socket")
+		os.Exit(1)
+	}
+
+
+
+
+	go func(channel syslog.LogPartsChannel, w *syslogclient.Writer) {
+
+
 		for logParts := range channel {
 			facilityId := uint(logParts["facility"].(int))
 			severityId := uint(logParts["severity"].(int))
@@ -96,8 +112,6 @@ func handleSyslog() {
 				continue
 			}
 
-			//fmt.Println(logParts)
-
 			// build message
 			message := fmt.Sprintf("%s %s", logParts["hostname"], logParts["content"])
 
@@ -106,9 +120,10 @@ func handleSyslog() {
 				message = fmt.Sprintf(configuration.Syslog.Output.Template, message)
 			}
 
+			w.Info(message)
 			LoggerStdout.Println(message)
 		}
-	}(channel)
+	}(channel, forwardingConn)
 
 	server.Wait()
 }

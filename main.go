@@ -4,6 +4,7 @@ import (
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
 	yaml "gopkg.in/yaml.v2"
+	"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
 	"log"
 	"os"
@@ -133,6 +134,9 @@ func main() {
 
 	// parse yml configuration
 	parseConfiguration()
+	if opts.Verbose == true {
+		spew.Dump(configuration)
+	}
 
 	LoggerStdout.Println(fmt.Sprintf("Starting %s version %s", Name, Version))
 
